@@ -3,36 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вазн Индекси Калкулятори</title>
+    <title>Sizning Sog'ligingiz | Калькулятор</title>
     <style>
-        body { font-family: sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); width: 90%; max-width: 300px; text-align: center; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
-        #res { margin-top: 20px; font-weight: bold; color: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f4f8; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+        .lang-switch { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .lang-btn { padding: 5px 12px; border: 1px solid #ddd; border-radius: 20px; cursor: pointer; background: #fff; font-size: 14px; }
+        .lang-btn.active { background: #27ae60; color: white; border-color: #27ae60; }
+        h2 { color: #2c3e50; margin-bottom: 25px; }
+        .tab-menu { display: flex; border-bottom: 2px solid #eee; margin-bottom: 20px; }
+        .tab { flex: 1; padding: 10px; cursor: pointer; color: #7f8c8d; }
+        .tab.active { color: #27ae60; border-bottom: 2px solid #27ae60; font-weight: bold; }
+        .form-group { text-align: left; margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 500; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 10px; font-size: 18px; cursor: pointer; margin-top: 10px; }
+        #result { margin-top: 25px; padding: 15px; border-radius: 10px; display: none; background: #e8f5e9; color: #2e7d32; font-weight: bold; }
+        .articles { margin-top: 30px; text-align: left; font-size: 14px; border-top: 1px solid #eee; padding-top: 20px; }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <h2>BMI Калкулятор</h2>
-    <input type="number" id="h" placeholder="Бўйингиз (см)">
-    <input type="number" id="w" placeholder="Вазнингиз (кг)">
-    <button onclick="calc()">Ҳисоблаш</button>
-    <div id="res"></div>
+<div class="container">
+    <div class="lang-switch">
+        <div class="lang-btn active" onclick="setLang('uz')">UZ</div>
+        <div class="lang-btn" onclick="setLang('ru')">RU</div>
+        <div class="lang-btn" onclick="setLang('en')">EN</div>
+    </div>
+
+    <div class="tab-menu">
+        <div id="tab-bmi" class="tab active" onclick="showTab('bmi')">BMI</div>
+        <div id="tab-kcal" class="tab" onclick="showTab('kcal')">Kcal</div>
+    </div>
+
+    <h2 id="title">BMI Калькулятор</h2>
+
+    <div id="bmi-form">
+        <div class="form-group">
+            <label id="lbl-h">Bo'yingiz (cm):</label>
+            <input type="number" id="h" placeholder="175">
+        </div>
+        <div class="form-group">
+            <label id="lbl-w">Vazningiz (kg):</label>
+            <input type="number" id="w" placeholder="70">
+        </div>
+    </div>
+
+    <div id="kcal-form" style="display:none;">
+        <div class="form-group">
+            <label id="lbl-age">Yoshingiz:</label>
+            <input type="number" id="age" placeholder="25">
+        </div>
+        <div class="form-group">
+            <label id="lbl-gender">Jinsingiz:</label>
+            <select id="gender">
+                <option value="1">Erkak</option>
+                <option value="0">Ayol</option>
+            </select>
+        </div>
+    </div>
+
+    <button onclick="calculate()" id="btn-calc">Hisoblash</button>
+    <div id="result"></div>
+
+    <div class="articles" id="article-box">
+        <h4 id="art-title">BMI nima?</h4>
+        <p id="art-text">Vazn indeksi sog'ligingizni nazorat qilish uchun eng asosiy ko'rsatkichdir.</p>
+    </div>
 </div>
 
 <script>
-    function calc() {
-        let h = document.getElementById('h').value / 100;
-        let w = document.getElementById('w').value;
-        if(h > 0 && w > 0) {
-            let bmi = (w / (h * h)).toFixed(1);
-            let msg = bmi < 18.5 ? "Озиқ" : bmi < 25 ? "Норма" : "Ортиқча вазн";
-            document.getElementById('res').innerHTML = "Натижа: " + bmi + "<br>" + msg;
-        } else { alert("Маълумот киритинг!"); }
+    let currentTab = 'bmi';
+    let currentLang = 'uz';
+
+    const translations = {
+        uz: { titleB: "BMI Калькулятор", titleK: "Калория ҳисоблагич", h: "Bo'yingiz (cm):", w: "Vazningiz (kg):", age: "Yoshingiz:", gender: "Jinsingiz:", calc: "Hisoblash", artT: "BMI nima?", artX: "Vazn indeksi sog'ligingizni nazorat qilish uchun asosiy ko'rsatkichdir." },
+        ru: { titleB: "BMI Калькулятор", titleK: "Калькулятор калорий", h: "Ваш рост (см):", w: "Ваш вес (кг):", age: "Ваш возраст:", gender: "Ваш пол:", calc: "Рассчитать", artT: "Что такое BMI?", artX: "Индекс массы тела — важный показатель вашего здоровья." },
+        en: { titleB: "BMI Calculator", titleK: "Calories Calculator", h: "Your Height (cm):", w: "Your Weight (kg):", age: "Your Age:", gender: "Your Gender:", calc: "Calculate", artT: "What is BMI?", artX: "Body Mass Index is a key indicator of your overall health." }
+    };
+
+    function setLang(lang) {
+        currentLang = lang;
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        updateUI();
+    }
+
+    function showTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        document.getElementById('bmi-form').style.display = tab === 'bmi' ? 'block' : 'none';
+        document.getElementById('kcal-form').style.display = tab === 'kcal' ? 'block' : 'none';
+        updateUI();
+    }
+
+    function updateUI() {
+        const t = translations[currentLang];
+        document.getElementById('title').innerText = currentTab === 'bmi' ? t.titleB : t.titleK;
+        document.getElementById('lbl-h').innerText = t.h;
+        document.getElementById('lbl-w').innerText = t.w;
+        document.getElementById('lbl-age').innerText = t.age;
+        document.getElementById('lbl-gender').innerText = t.gender;
+        document.getElementById('btn-calc').innerText = t.calc;
+        document.getElementById('art-title').innerText = t.artT;
+        document.getElementById('art-text').innerText = t.artX;
+    }
+
+    function calculate() {
+        let res = document.getElementById('result');
+        res.style.display = 'block';
+        if(currentTab === 'bmi') {
+            let h = document.getElementById('h').value / 100;
+            let w = document.getElementById('w').value;
+            let bmi = (w / (h*h)).toFixed(1);
+            res.innerHTML = "BMI: " + bmi;
+        } else {
+            let w = document.getElementById('w').value;
+            let h = document.getElementById('h').value;
+            let age = document.getElementById('age').value;
+            let g = document.getElementById('gender').value;
+            let kcal = g == 1 ? (10*w + 6.25*h - 5*age + 5) : (10*w + 6.25*h - 5*age - 161);
+            res.innerHTML = "Kcal: ~" + Math.round(kcal) + " ккал/кун";
+        }
     }
 </script>
+<div style="margin-top: 50px; padding: 25px; background-color: #f8f9fa; border-top: 2px solid #27ae60; font-size: 14px; color: #444; text-align: left; border-radius: 0 0 20px 20px; line-height: 1.6;">
+    <h4 style="margin-top: 0; color: #2c3e50;">Privacy Policy</h4>
+    <p>Your privacy is important to us. This Privacy Policy explains how our Smart Health Application treats your information.</p>
+    
+    <ul style="padding-left: 20px;">
+        <li><b>Data Collection:</b> We do not collect, store, or share any personal data (such as names, IP addresses, or location). All calculations are performed locally in your browser.</li>
+        <li><b>Ads and Cookies:</b> This site may use Google AdSense to display advertisements. Google may use cookies to serve ads based on your prior visits to this or other websites.</li>
+        <li><b>Third-Party Links:</b> Our site may contain links to external sites that are not operated by us.</li>
+    </ul>
 
+    <p style="font-style: italic; font-size: 12px; color: #888;">By using this website, you hereby consent to our Privacy Policy and agree to its terms.</p>
+    
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+    <p style="text-align: center; margin-bottom: 0;">&copy; 2026 Smart Health Hub. All Rights Reserved.</p>
+</div>
 </body>
 </html>
